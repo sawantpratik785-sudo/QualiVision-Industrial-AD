@@ -1,0 +1,21 @@
+# Data folder (MVTec AD images are ~5GB and should not be pushed to GitHub)
+data/
+*.tar.xz
+*.tar.gz
+
+# Python & PyTorch cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+checkpoints/
+*.pth
+
+# Streamlit session & local environment
+.streamlit/
+.env
+venv/
+env/
+
+# Database file (keep local)
+inspections.db
