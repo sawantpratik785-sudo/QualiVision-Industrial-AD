@@ -1,3 +1,4 @@
+import os
 import torch
 from dataset import MVTecDataset
 from patchcore import PatchCore
@@ -5,19 +6,23 @@ from db_logger import init_db, log_inspection, fetch_recent_logs
 from torch.utils.data import DataLoader
 import numpy as np
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+DB_FILE = os.path.join(BASE_DIR, "inspections.db")
+
 def run_pipeline():
     print("==================================================")
     print("STEP 1: INITIALIZING SQLITE DATABASE")
     print("==================================================")
-    init_db()
-    print("Database `inspections.db` ready.")
+    init_db(DB_FILE)
+    print(f"Database `{DB_FILE}` ready.")
 
     print("\n==================================================")
     print("STEP 2: LOADING TRAINING DATA & BUILDING MEMORY BANK")
     print("==================================================")
-    train_ds = MVTecDataset('./data', 'bottle', split='train')
+    train_ds = MVTecDataset(DATA_DIR, 'bottle', split='train')
     train_loader = DataLoader(train_ds, batch_size=16, shuffle=False)
-    print(f"Loaded {len(train_ds)} normal training images.")
+    print(f"Loaded {len(train_ds)} normal training images from: {DATA_DIR}")
 
     # Initialize PatchCore from scratch
     model = PatchCore(backbone_name='resnet18', coreset_ratio=0.01, device='cpu')
@@ -26,7 +31,7 @@ def run_pipeline():
     print("\n==================================================")
     print("STEP 3: RUNNING INFERENCE & COMPARISON")
     print("==================================================")
-    test_ds = MVTecDataset('./data', 'bottle', split='test')
+    test_ds = MVTecDataset(DATA_DIR, 'bottle', split='test')
     
     # Grab one defect sample and one good sample
     good_sample = None
@@ -39,7 +44,7 @@ def run_pipeline():
         if good_sample is not None and defect_sample is not None:
             break
 
-    threshold = 3.0
+    threshold = 2.50
 
     # 1. Defective Sample
     print(f"\n---> [TEST 1] Defective Sample ({defect_sample['defect_type']})")
@@ -49,7 +54,7 @@ def run_pipeline():
     print(f"     Configured Threshold    : {threshold:.4f}")
     print(f"     Inference Latency       : {lat_def:.1f} ms")
     print(f"     Verdict                 : {verdict_def}")
-    log_inspection('bottle', 'PatchCore', score_def, threshold, verdict_def, lat_def, f"{defect_sample['defect_type']}.png")
+    log_inspection('bottle', 'PatchCore', score_def, threshold, verdict_def, lat_def, f"{defect_sample['defect_type']}.png", db_path=DB_FILE)
 
     # 2. Good Sample
     print(f"\n---> [TEST 2] Normal (Good) Sample ({good_sample['defect_type']})")
@@ -59,12 +64,12 @@ def run_pipeline():
     print(f"     Configured Threshold    : {threshold:.4f}")
     print(f"     Inference Latency       : {lat_good:.1f} ms")
     print(f"     Verdict                 : {verdict_good}")
-    log_inspection('bottle', 'PatchCore', score_good, threshold, verdict_good, lat_good, "good_sample.png")
+    log_inspection('bottle', 'PatchCore', score_good, threshold, verdict_good, lat_good, "good_sample.png", db_path=DB_FILE)
 
     print("\n==================================================")
     print("STEP 4: INSPECTING SQLITE AUDIT TRAIL RECORDS")
     print("==================================================")
-    logs = fetch_recent_logs(limit=4)
+    logs = fetch_recent_logs(limit=4, db_path=DB_FILE)
     print(f"{'Timestamp':<20} | {'Part':<8} | {'Model':<10} | {'Score':<8} | {'Verdict':<8} | {'Latency':<8}")
     print("-" * 75)
     for r in logs:
