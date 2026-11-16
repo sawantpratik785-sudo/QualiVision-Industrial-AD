@@ -31,14 +31,14 @@ class IEEEArticleCanvas(canvas.Canvas):
         
         # Header (Pages after Page 1)
         if self._pageNumber > 1:
-            self.drawString(54, 752, "AIM3003 Computer Vision | D Y Patil International University, Pune | AY 2026–2027")
-            self.drawRightString(558, 752, "Research Paper & Lab Manual Record | Sawant, Patil, Deshmukh")
+            self.drawString(54, 752, "AIM3003 Computer Vision | AY 2026–2027")
+            self.drawRightString(558, 752, "Pratik Sawant | Anvesh Patil | Jayesh Deshmukh")
             self.setStrokeColor(HexColor("#cbd5e1"))
             self.setLineWidth(0.5)
             self.line(54, 744, 558, 744)
         
         # Footer (All Pages)
-        self.drawString(54, 34, "Dept. of Computer Science & Engineering | Unsupervised Visual Anomaly Detection (PatchCore vs. EfficientAD)")
+        self.drawString(54, 34, "Unsupervised Visual Anomaly Detection (PatchCore vs. EfficientAD)")
         self.drawRightString(558, 34, f"Page {self._pageNumber} of {page_count}")
         self.setStrokeColor(HexColor("#cbd5e1"))
         self.setLineWidth(0.5)
